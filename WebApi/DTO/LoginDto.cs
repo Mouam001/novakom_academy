@@ -1,0 +1,14 @@
+using System.ComponentModel.DataAnnotations;
+
+namespace WebApi.DTO;
+
+public class LoginDto
+{
+    [Required]
+    [EmailAddress]
+    public string Email { get; set; } = string.Empty;
+
+    [Required]
+    [MinLength(6)]
+    public string MotDePasse { get; set; } = string.Empty;
+}

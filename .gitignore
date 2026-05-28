@@ -1,0 +1,61 @@
+# Dependencies
+**/node_modules/
+**/.pnp/
+**/.pnp.js
+
+# Build outputs
+**/dist/
+**/dist-ssr/
+**/build/
+**/coverage/
+**/bin/
+**/obj/
+*.tsbuildinfo
+
+# Vite / tool caches
+**/.vite/
+**/.vite-temp/
+**/.cache/
+**/.parcel-cache/
+**/.eslintcache
+
+# Logs
+logs/
+**/logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Environment and local settings
+.env
+.env.*
+!.env.example
+*.local
+appsettings.*.local.json
+
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# IDE / editor
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.ntvs*
+*.njsproj
+*.sw?
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
