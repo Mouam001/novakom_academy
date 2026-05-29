@@ -1,73 +1,72 @@
-const API_URL = 'http://localhost:5000/api/users'
+const API_URL = 'http://localhost:5095/api/user'
 
-export async function getUsers() {
-  const response = await fetch(API_URL)
-
-  if (!response.ok) {
-    throw new Error('Erreur lors du chargement des utilisateurs')
-  }
-
-  return response.json()
-}
-
-export async function getUserById(id) {
-  const response = await fetch(`${API_URL}/${id}`)
-
-  if (!response.ok) {
-    throw new Error('Utilisateur introuvable')
-  }
-
-  return response.json()
-}
-
-export async function createUser(user) {
-  const response = await fetch(API_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(user),
-  })
-
-  if (!response.ok) {
-    throw new Error('Erreur lors de la création')
-  }
-
-  return response.json()
-}
-
-export async function updateUser(id, user) {
-  const response = await fetch(`${API_URL}/${id}`, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(user),
-  })
-
-  if (!response.ok) {
-    throw new Error('Erreur lors de la modification')
+class ApiRequestError extends Error {
+  constructor(message, status, options) {
+    super(message, options)
+    this.name = 'ApiRequestError'
+    this.status = status
   }
 }
 
-export async function deleteUser(id) {
-  const response = await fetch(`${API_URL}/${id}`, {
-    method: 'DELETE',
-  })
+async function readResponse(response) {
+  const text = await response.text()
 
-  if (!response.ok) {
-    throw new Error('Erreur lors de la suppression')
+  if (!text) {
+    return {}
+  }
+
+  try {
+    return JSON.parse(text)
+  } catch {
+    return {}
   }
 }
 
-export async function loginUser(credentials) {
-  const response = await fetch(`${API_URL}/login`, {
+async function sendRequest(url, options) {
+  try {
+    const response = await fetch(url, options)
+    const data = await readResponse(response)
+
+    if (!response.ok) {
+      throw new ApiRequestError(data.message || data.error || 'Une erreur est survenue', response.status)
+    }
+
+    return data
+  } catch (error) {
+    if (error instanceof TypeError) {
+      throw new Error('Impossible de contacter le serveur', { cause: error })
+    }
+
+    throw error
+  }
+}
+
+export function loginUser(credentials) {
+  return sendRequest(`${API_URL}/login`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(credentials),
   })
+}
 
-  return response.json()
+export async function createUser(user) {
+  const options = {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(user),
+  }
+
+  try {
+    return await sendRequest(API_URL, options)
+  } catch (error) {
+    if (error.status === 404 || error.status === 405) {
+      return sendRequest(`${API_URL}/register`, options)
+    }
+
+    throw error
+  }
 }

@@ -1,11 +1,14 @@
 import { useState } from 'react'
-import { emptyLogin } from '../../models/userModel'
+import { emptyLoginForm, validateLoginForm } from '../../models/userModel'
 import { loginUser } from '../../services/userService'
 import LoginView from './view'
 
-function Login() {
-  const [form, setForm] = useState(emptyLogin)
-  const [message, setMessage] = useState('')
+function Login({ initialMessage = '', onCreateAccount, onLoginSuccess }) {
+  const [form, setForm] = useState(emptyLoginForm)
+  const [message, setMessage] = useState(initialMessage)
+  const [messageType, setMessageType] = useState(initialMessage ? 'success' : '')
+  const [errors, setErrors] = useState({})
+  const [isLoading, setIsLoading] = useState(false)
 
   function handleChange(event) {
     const { name, value } = event.target
@@ -14,27 +17,60 @@ function Login() {
       ...form,
       [name]: value,
     })
+
+    if (errors[name]) {
+      setErrors({
+        ...errors,
+        [name]: '',
+      })
+    }
   }
 
   async function handleSubmit(event) {
     event.preventDefault()
 
-    const result = await loginUser(form)
+    try {
+      const validationErrors = validateLoginForm(form)
 
-    if (result.success) {
-      setMessage('Connexion réussie')
-    } else {
-      setMessage('Email ou mot de passe incorrect')
+      if (Object.keys(validationErrors).length > 0) {
+        setErrors(validationErrors)
+        return
+      }
+
+      setIsLoading(true)
+      setMessage('')
+      setMessageType('')
+      setErrors({})
+
+      const result = await loginUser(form)
+
+      if (result.success === false) {
+        throw new Error('Email ou mot de passe incorrect')
+      }
+
+      const user = result.user || result
+
+      setForm(emptyLoginForm)
+      onLoginSuccess(user)
+    } catch (error) {
+      setMessage(error.message || 'Email ou mot de passe incorrect')
+      setMessageType('error')
+    } finally {
+      setIsLoading(false)
     }
   }
 
   return (
-      <LoginView
-          form={form}
-          message={message}
-          onChange={handleChange}
-          onSubmit={handleSubmit}
-      />
+    <LoginView
+      form={form}
+      message={message}
+      messageType={messageType}
+      errors={errors}
+      isLoading={isLoading}
+      onChange={handleChange}
+      onSubmit={handleSubmit}
+      onCreateAccount={onCreateAccount}
+    />
   )
 }
 

@@ -38,7 +38,7 @@ public class UserController : ControllerBase
             Telephone = dto.Telephone,
             Ville = dto.Ville,
             Pays = dto.Pays,
-            PasswordHash = _passwordService.HashPassword(dto.MotDePasse),
+            PasswordHash = _passwordService.HashPassword(dto.Password),
         };
 
         _context.Users.Add(user);
@@ -51,7 +51,7 @@ public class UserController : ControllerBase
     public async Task<IActionResult> Login(LoginDto dto)
     {
         var user = await _context.Users.FirstOrDefaultAsync(item => item.Email == dto.Email);
-        if (user is null || !_passwordService.VerifyPassword(dto.MotDePasse, user.PasswordHash))
+        if (user is null || !_passwordService.VerifyPassword(dto.Password, user.PasswordHash))
         {
             return Unauthorized(new { message = "Email ou mot de passe incorrect." });
         }

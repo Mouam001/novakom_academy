@@ -31,5 +31,5 @@ public class RegisterUserDto
 
     [Required]
     [MinLength(6)]
-    public string MotDePasse { get; set; } = string.Empty;
+    public string Password { get; set; } = string.Empty;
 }

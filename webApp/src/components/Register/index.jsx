@@ -1,12 +1,18 @@
 import { useState } from 'react'
-import { emptyUser } from '../../models/userModel'
+import {
+  emptyRegisterForm,
+  getPasswordRules,
+  validateRegisterForm,
+} from '../../models/userModel'
 import { createUser } from '../../services/userService'
 import RegisterView from './view'
 
-function Register() {
-  const [form, setForm] = useState(emptyUser)
+function Register({ onLoginClick, onRegisterSuccess }) {
+  const [form, setForm] = useState(emptyRegisterForm)
+  const [errors, setErrors] = useState({})
   const [message, setMessage] = useState('')
-  const [error, setError] = useState('')
+  const [messageType, setMessageType] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
 
   function handleChange(event) {
     const { name, value } = event.target
@@ -15,32 +21,62 @@ function Register() {
       ...form,
       [name]: value,
     })
+
+    if (errors[name]) {
+      setErrors({
+        ...errors,
+        [name]: '',
+      })
+    }
   }
 
   async function handleSubmit(event) {
     event.preventDefault()
 
     try {
+      const validationErrors = validateRegisterForm(form)
+
+      if (Object.keys(validationErrors).length > 0) {
+        setErrors(validationErrors)
+        setMessage('Veuillez corriger les champs indiqués')
+        setMessageType('error')
+        return
+      }
+
+      setIsLoading(true)
       setMessage('')
-      setError('')
+      setMessageType('')
+      setErrors({})
 
       await createUser(form)
 
-      setMessage('Utilisateur créé avec succès')
-      setForm(emptyUser)
-    } catch (err) {
-      setError(err.message)
+      setForm(emptyRegisterForm)
+      setMessage('Compte créé avec succès')
+      setMessageType('success')
+
+      setTimeout(() => {
+        onRegisterSuccess()
+      }, 1200)
+    } catch (error) {
+      setMessage(error.message || 'Impossible de créer le compte')
+      setMessageType('error')
+    } finally {
+      setIsLoading(false)
     }
   }
 
   return (
-      <RegisterView
-          form={form}
-          message={message}
-          error={error}
-          onChange={handleChange}
-          onSubmit={handleSubmit}
-      />
+    <RegisterView
+      form={form}
+      errors={errors}
+      passwordRules={getPasswordRules(form.password)}
+      message={message}
+      messageType={messageType}
+      isLoading={isLoading}
+      onChange={handleChange}
+      onSubmit={handleSubmit}
+      onLoginClick={onLoginClick}
+    />
   )
 }
 

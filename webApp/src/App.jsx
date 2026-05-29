@@ -1,20 +1,48 @@
-import Register from './components/Register'
+import { useState } from 'react'
 import Login from './components/Login'
-import Users from './components/Users'
+import Register from './components/Register'
+import Home from './components/Home'
 
 function App() {
-  return (
-      <main className="min-h-screen bg-gray-100 p-6">
-        <div className="max-w-5xl mx-auto space-y-8">
-          <h1 className="text-3xl font-bold text-center">
-            Gestion des utilisateurs
-          </h1>
+  const [page, setPage] = useState('login')
+  const [loginMessage, setLoginMessage] = useState('')
+  const [connectedUser, setConnectedUser] = useState(null)
 
-          <Register />
-          <Login />
-          <Users />
-        </div>
-      </main>
+  function showLogin(message = '') {
+    setLoginMessage(message)
+    setPage('login')
+  }
+
+  function showRegister() {
+    setLoginMessage('')
+    setPage('register')
+  }
+
+  function showHome(user) {
+    setLoginMessage('')
+    setConnectedUser(user)
+    setPage('home')
+  }
+
+  return (
+    <>
+      {page === 'login' && (
+        <Login
+          initialMessage={loginMessage}
+          onCreateAccount={showRegister}
+          onLoginSuccess={showHome}
+        />
+      )}
+
+      {page === 'register' && (
+        <Register
+          onLoginClick={() => showLogin()}
+          onRegisterSuccess={() => showLogin('Compte créé avec succès')}
+        />
+      )}
+
+      {page === 'home' && <Home user={connectedUser} />}
+    </>
   )
 }
 
